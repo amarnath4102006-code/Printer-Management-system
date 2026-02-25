@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+
+// Structure for Print Job
+struct PrintJob {
+    int jobID;
+    char userName[50];
+    int pages;
+};
+
+struct PrintJob queue[MAX];
+int front = -1, rear = -1;
+
+// Function Prototypes
+void addJob();
+void viewJobs();
+void deleteJob();
+void searchJob();
+void saveToFile();
+void loadFromFile();
+
+// Add Print Job
+void addJob() {
+    if (rear == MAX - 1) {
+        printf("\nQueue Overflow! Cannot add more jobs.\n");
+        return;
+    }
+
+    struct PrintJob job;
+
+    printf("\nEnter Job ID: ");
+    scanf("%d", &job.jobID);
+    printf("Enter User Name: ");
+    scanf("%s", job.userName);
+    printf("Enter Number of Pages: ");
+    scanf("%d", &job.pages);
+
+    if (front == -1) front = 0;
+    queue[++rear] = job;
+
+    printf("\nPrint Job Added Successfully!\n");
+}
+
+// View All Jobs
+void viewJobs() {
+    if (front == -1 || front > rear) {
+        printf("\nNo Print Jobs in Queue.\n");
+        return;
+    }
+
+    printf("\n--- Print Job Queue ---\n");
+    for (int i = front; i <= rear; i++) {
+        printf("Job ID: %d | User: %s | Pages: %d\n",
+               queue[i].jobID,
+               queue[i].userName,
+               queue[i].pages);
+    }
+}
+
+// Delete (Print Completed Job)
+void deleteJob() {
+    if (front == -1 || front > rear) {
+        printf("\nQueue Underflow! No jobs to delete.\n");
+        return;
+    }
+
+    printf("\nPrinting Job ID: %d\n", queue[front].jobID);
+    front++;
+
+    printf("Job Completed & Removed from Queue!\n");
+}
+
+// Search Job
+void searchJob() {
+    int id, found = 0;
+
+    printf("\nEnter Job ID to Search: ");
+    scanf("%d", &id);
+
+    for (int i = front; i <= rear; i++) {
+        if (queue[i].jobID == id) {
+            printf("\nJob Found!\n");
+            printf("User: %s | Pages: %d\n",
+                   queue[i].userName,
+                   queue[i].pages);
+            found = 1;
+            break;
+        }
+    }
+
+    if (!found)
+        printf("\nJob Not Found!\n");
+}
+
+// Save Jobs to File
+void saveToFile() {
+    FILE *fp = fopen("printer_data.txt", "w");
+    if (fp == NULL) {
+        printf("Error saving file!\n");
+        return;
+    }
+
+    for (int i = front; i <= rear; i++) {
+        fprintf(fp, "%d %s %d\n",
+                queue[i].jobID,
+                queue[i].userName,
+                queue[i].pages);
+    }
+
+    fclose(fp);
+}
+
+// Load Jobs from File
+void loadFromFile() {
+    FILE *fp = fopen("printer_data.txt", "r");
+    if (fp == NULL) return;
+
+    struct PrintJob job;
+    while (fscanf(fp, "%d %s %d",
+                  &job.jobID,
+                  job.userName,
+                  &job.pages) != EOF) {
+        if (front == -1) front = 0;
+        queue[++rear] = job;
+    }
+
+    fclose(fp);
+}
+
+// Main Function
+int main() {
+    int choice;
+
+    loadFromFile();
+
+    while (1) {
+        printf("\n===== Printer Management System =====\n");
+        printf("1. Add Print Job\n");
+        printf("2. View Print Jobs\n");
+        printf("3. Print Next Job\n");
+        printf("4. Search Job\n");
+        printf("5. Save & Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: addJob(); break;
+            case 2: viewJobs(); break;
+            case 3: deleteJob(); break;
+            case 4: searchJob(); break;
+            case 5:
+                saveToFile();
+                printf("\nData Saved. Exiting...\n");
+                exit(0);
+            default:
+                printf("\nInvalid Choice!\n");
+        }
+    }
+
+    return 0;
+}
